@@ -16,9 +16,10 @@ This Python script queries metadata from an AWS EC2 instance using the Instance 
  We need to have a key pair for SSH access to the EC2 instance. Use the following command to set the permission and connect:
   ```bash
   ssh -i <key-pair.pem> ec2-user@<EC2-IP-Address>
-
+  ```
   ```bash
   chmod 400 <key-pair.pem>
+  ```
    
 - **Python 3.x**
 - **`requests` Library:**  
@@ -50,12 +51,12 @@ To run the script, execute:
 
 ```bash
 python3 get_metadata_ec2.py
-
+```
 
 ## Example Output
 - All Metadata:
+
 ```json
-Copy code
 {
     "ami-id": "ami-01816d07b1128cd2d",
     "ami-launch-index": "0",
@@ -66,9 +67,10 @@ Copy code
     ],
     ...
 }
+```
 - Specific Metadata:
+
 ```json
-Copy code
 {
     "ami-id": "ami-01816d07b1128cd2d",
     "ami-launch-index": "0",

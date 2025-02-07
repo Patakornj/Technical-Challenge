@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/Patakornj/Technical-Challenge
-    path: Tech_Test_DevOps/Test AWS Focus/ArgoCD/Frontend
+    path: Tech_Test_DevOps/Test AWS Focus/Frontend
     targetRevision: master
   destination:
     server: https://kubernetes.default.svc

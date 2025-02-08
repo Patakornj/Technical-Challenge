@@ -29,7 +29,7 @@ jobs:
       - name: Build Docker image
         run: |
           cd ./dummy-app
-          docker build -t ${{ secrets.AWS_ECR_REGISTRY }}:${{ github.sha }} .
+          docker build -t ${{ secrets.AWS_ECR_REGISTRY }}:${{ github.run_number }} .
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
@@ -38,7 +38,24 @@ jobs:
 
       - name: Push Docker image to ECR
         run: |
-          docker tag ${{ secrets.AWS_ECR_REGISTRY }}:${{ github.sha }} ${{ secrets.AWS_ECR_REGISTRY }}:latest
-          docker push ${{ secrets.AWS_ECR_REGISTRY }}:${{ github.sha }}
+          docker tag ${{ secrets.AWS_ECR_REGISTRY }}:${{ github.run_number }} ${{ secrets.AWS_ECR_REGISTRY }}:latest
+          docker push ${{ secrets.AWS_ECR_REGISTRY }}:${{ github.run_number }}
           docker push ${{ secrets.AWS_ECR_REGISTRY }}:latest
+    
+      - name: Update Argo CD manifests
+        run: |
+          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_REGISTRY }}:${{ github.run_number }}|' ArgoCD/frontend.yaml
+          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_REGISTRY }}:${{ github.run_number }}|' ArgoCD/backend.yaml
 
+      - name: Check Git Status
+        run: git status
+      
+      
+      # - name: Commit and push updated Argo CD manifests
+      #   run: |
+      #     git config --global user.email ${{ secrets.GIT_USER_EMAIL }} 
+      #     git config --global user.name ${{ secrets.GIT_USERNAME }}
+      #     PR_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+      #     git add ArgoCD/frontend.yaml ArgoCD/backend.yaml
+      #     git commit -m "Update Argo CD manifests with new image tag: ${{ github.run_number }}"
+      #     git push $PR_BRANCH

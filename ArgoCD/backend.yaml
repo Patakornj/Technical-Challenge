@@ -16,3 +16,4 @@ spec:
     automated:
       prune: true
       selfHeal: true
+image: ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}

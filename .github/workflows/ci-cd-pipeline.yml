@@ -16,4 +16,5 @@ jobs:
       - name: Run Trivy SAST scan
         uses: aquasecurity/trivy-action@v0.5.0
         with:
-          image: your-image:latest 
+          scan-type: "fs"
+          scan-ref: "."

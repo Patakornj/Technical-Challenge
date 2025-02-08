@@ -44,21 +44,21 @@ jobs:
       
       - name: Update Argo CD manifest for frontend
         run: |
-          echo "Contents of ArgoCD/frontend.yaml before update:"
-          cat ArgoCD/frontend.yaml
-          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}|' ArgoCD/frontend.yaml
-          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:latest|' ArgoCD/frontend.yaml
-          echo "Contents of ArgoCD/frontend.yaml after update:"
-          cat ArgoCD/frontend.yaml
+          echo "Contents of frontend-deployment.yaml before update:"
+          cat ArgoCD/Frontend/frontend-deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}|' ArgoCD/Frontend/frontend-deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:latest|' ArgoCD/Frontend/frontend-deployment.yaml
+          echo "Contents of frontend-deployment.yaml after update:"
+          cat ArgoCD/Frontend/frontend-deployment.yaml
 
       - name: Update Argo CD manifest for backend
         run: |
           echo "Contents of ArgoCD/backend.yaml before update:"
-          cat ArgoCD/backend.yaml
-          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}|' ArgoCD/backend.yaml
-          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:latest|' ArgoCD/backend.yaml
-          echo "Contents of ArgoCD/backend.yaml after update:"
-          cat ArgoCD/backend.yaml
+          cat ArgoCD/Backend/backend-deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}|' ArgoCD/Backend/backend-deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:latest|' ArgoCD/Backend/backend-deployment.yaml
+          echo "Contents of backend-deployment.yaml after update:"
+          cat ArgoCD/Backend/backend-deployment.yaml
 
       - name: Commit updated manifest files
         run: |
@@ -67,5 +67,13 @@ jobs:
           git add ArgoCD/frontend.yaml
           git add ArgoCD/backend.yaml
           git commit -m "Update Argo CD manifests with new image tag"
-          git pull --rebase
           git push
+
+      - name: Trigger Argo CD sync
+        run: |
+          argocd app sync frontend
+          argocd app sync backend
+        env:
+          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+          ARGOCD_USERNAME: ${{ secrets.ARGOCD_USERNAME }}
+          ARGOCD_PASSWORD: ${{ secrets.ARGOCD_PASSWORD }}

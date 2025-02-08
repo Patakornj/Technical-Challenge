@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/Patakornj/Technical-Challenge
-    path: Frontend
+    path: ArgoCD/Frontend
     targetRevision: master
   destination:
     server: https://kubernetes.default.svc
@@ -16,4 +16,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-image: ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}

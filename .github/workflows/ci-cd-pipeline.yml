@@ -40,14 +40,12 @@ jobs:
         run: |
           docker tag ${{ secrets.AWS_ECR_URI }}:${{ github.sha }} ${{ secrets.AWS_ECR_URI }}:latest
           docker push ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}
-          docker push ${{ secrets.AWS_ECR_URI }}:latest
       
       - name: Update Argo CD manifest for frontend
         run: |
           echo "Contents of frontend-deployment.yaml before update:"
           cat ArgoCD/Frontend/frontend-deployment.yaml
           sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}|' ArgoCD/Frontend/frontend-deployment.yaml
-          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:latest|' ArgoCD/Frontend/frontend-deployment.yaml
           echo "Contents of frontend-deployment.yaml after update:"
           cat ArgoCD/Frontend/frontend-deployment.yaml
 
@@ -56,16 +54,15 @@ jobs:
           echo "Contents of ArgoCD/backend.yaml before update:"
           cat ArgoCD/Backend/backend-deployment.yaml
           sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}|' ArgoCD/Backend/backend-deployment.yaml
-          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:latest|' ArgoCD/Backend/backend-deployment.yaml
           echo "Contents of backend-deployment.yaml after update:"
           cat ArgoCD/Backend/backend-deployment.yaml
 
       - name: Commit updated manifest files
         run: |
-          git config user.email "tonytoast3006@gmail.com"
-          git config user.name "Patkarornj"
-          git add ArgoCD/frontend.yaml
-          git add ArgoCD/backend.yaml
+          git config user.email ${{ secrets.GIT_USER_EMAIL}}
+          git config user.name ${{ secrets.GIT_USER }}
+          git add ArgoCD/Frontend/frontend-deployment.yaml
+          git add ArgoCD/Backend/backend-deployment.yaml
           git commit -m "Update Argo CD manifests with new image tag"
           git push
 

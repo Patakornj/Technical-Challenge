@@ -13,7 +13,67 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Run Trivy SAST scan
-        uses: aquasecurity/trivy-action@v0.5.0
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          image: your-image:latest 
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_IDS }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Run Trivy SAST scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          path: .
+
+      - name: Build Docker image
+        run: |
+          cd ./dummy-app
+          docker build -t ${{ secrets.AWS_ECR_URI }}:${{ github.sha }} .
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          region: ${{ secrets.AWS_REGION }}
+
+      - name: Push Docker image to ECR
+        run: |
+          docker tag ${{ secrets.AWS_ECR_URI }}:${{ github.sha }} ${{ secrets.AWS_ECR_URI }}:latest
+          docker push ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}
+          docker push ${{ secrets.AWS_ECR_URI }}:latest
+      
+      - name: Update Argo CD manifest for frontend
+        run: |
+          echo "Contents of frontend-deployment.yaml before update:"
+          cat ArgoCD/Frontend/frontend-deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}|' ArgoCD/Frontend/frontend-deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:latest|' ArgoCD/Frontend/frontend-deployment.yaml
+          echo "Contents of frontend-deployment.yaml after update:"
+          cat ArgoCD/Frontend/frontend-deployment.yaml
+
+      - name: Update Argo CD manifest for backend
+        run: |
+          echo "Contents of ArgoCD/backend.yaml before update:"
+          cat ArgoCD/Backend/backend-deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:${{ github.sha }}|' ArgoCD/Backend/backend-deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.AWS_ECR_URI }}:latest|' ArgoCD/Backend/backend-deployment.yaml
+          echo "Contents of backend-deployment.yaml after update:"
+          cat ArgoCD/Backend/backend-deployment.yaml
+
+      - name: Commit updated manifest files
+        run: |
+          git config user.email "tonytoast3006@gmail.com"
+          git config user.name "Patkarornj"
+          git add ArgoCD/frontend.yaml
+          git add ArgoCD/backend.yaml
+          git commit -m "Update Argo CD manifests with new image tag"
+          git push
+
+      - name: Trigger Argo CD sync
+        run: |
+          argocd app sync frontend
+          argocd app sync backend
+        env:
+          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+          ARGOCD_USERNAME: ${{ secrets.ARGOCD_USERNAME }}
+          ARGOCD_PASSWORD: ${{ secrets.ARGOCD_PASSWORD }}

@@ -19,7 +19,7 @@ Build a fully automated infrastructure and deployment pipeline using Terraform, 
 				"s3:*",
 				"rds:*",
 				"iam:*",
-				"sts:AssumeRole",
+				"sts:*",
 				"logs:*",
 				"ecr:*",
 				"kms:*"

@@ -28,16 +28,19 @@ jobs:
           scan-type: "fs"
           path: .
 
+      # Build a Docker image for a dummy application
       - name: Build Docker image
         run: |
           cd ./dummy-app
           docker build -t ${{ secrets.AWS_ECR_URI }}:${{ github.sha }} .
 
+      # Log in to Amazon ECR
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         with:
           region: ${{ secrets.AWS_REGION }}
 
+      # Push the Docker image to Amazon ECR
       - name: Push Docker image to ECR
         run: |
           docker tag ${{ secrets.AWS_ECR_URI }}:${{ github.sha }} ${{ secrets.AWS_ECR_URI }}:latest
